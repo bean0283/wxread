@@ -13,16 +13,14 @@ import random
 import re
 import time
 import requests
-
+parentdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) 
+sys.path.insert(0,parentdir) 
 
 default_ua = 'Mozilla/5.0 (Linux; Android 11; MEIZU 18s Build/RKQ1.210614.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/107.0.5304.141 Mobile Safari/537.36 XWEB/5075 MMWEBSDK/20230202 MMWEBID/503 MicroMessenger/8.0.33.2320(0x28002151) WeChat/arm64 Weixin NetType/4G Language/zh_CN ABI/arm64'
 
-#青龙面板可以使用下面两个，在环境变量添加read和cookie
 read_ck = os.getenv('read')
-ck = read_ck.split('&')
-
-#个人自用可以使用下面的，同时注释上面两行
-#ck = ['你自己的cookie']
+#ck = read_ck.split('&')
+ck = ["填写你的ck"]
 
 site_url = 'https://m.cdcd.plus/tuijian'
 
@@ -89,6 +87,7 @@ class UserInfo():
                 
 			return status
 		except Exception:
+			
 			print(Exception)
 			self.message += str(Exception)
 
@@ -134,9 +133,12 @@ class UserInfo():
 
 			json_obj = json.loads(res.text)
 			temp_url = json_obj['jump']
+			print(temp_url)
 
-			self.referURL = re.match('(.*?)/read.html', temp_url)[0]
+			self.referURL = re.findall('(.*?)/read', temp_url)[0]
 			self.iu = temp_url[temp_url.rfind('iu=') + 3:]
+			print(self.referURL)
+			print(self.iu)
 
 		except Exception:
 			print(Exception,flush=True)
@@ -146,7 +148,7 @@ class UserInfo():
 	def goto_read(self, r):
 		try:
 			# r = random.random()
-			url = site_url + f'/do_read?iu={self.iu}&pageshow&r={r}'
+			url = site_url + f'/do_read?iu={self.iu}&for&zs&pageshow&r={r}'
 			headers = struct_headers(self.referURL)
 			res = requests.get(url=url, headers=headers)
 			json_obj = json.loads(res.text)
@@ -158,17 +160,17 @@ class UserInfo():
 				exit(-1)
 		except Exception:
 			print(Exception)
-			self.message += str(Exception)
+			self.message += "阅读失败"
 
 	def finish_read(self, r):
 		try:
-			url = site_url + f'/do_read?iu={self.iu}&pageshow&r={r}&jkey={self.jkey}'
+			url = site_url + f'/do_read?iu={self.iu}&for&zs&pageshow&r={r}&jkey={self.jkey}'
 			headers = struct_headers(self.referURL)
 			res = requests.get(url=url, headers=headers)
 			json_obj = json.loads(res.text)
 			msg = json_obj['success_msg']
 			self.jkey = json_obj['jkey']
-			if '150' in msg and 'url' in json_obj:
+			if '250' in msg and 'url' in json_obj:
 				print(msg,flush=True)
 				self.message += msg
 				self.message += "\n"
@@ -281,3 +283,5 @@ for index, userInfo in enumerate(ck):
 		cur_user.withdraw(score)
 	message += cur_user.retmsg()
 	message += '\n'
+	
+
